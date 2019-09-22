@@ -1,10 +1,17 @@
 //recursion practice
 
+//find your way out of a maze.
+let mazeModel = new Maze(8,8)
+let mazeView = new MazeViewController(mazeModel)
+
+
+
+
+
+
 
 //Variant on the algo below, but only print the dice rolls that add up to some number. --------------------------------------------
 
-let sumCount1 = [0]
-let sumCount2 = [0]
 
 function diceSumHelper(diceLeft,choices,desiredSum){
   
@@ -42,9 +49,9 @@ function getDiceCombosForSum(diceCount, desiredSum){
   diceSumHelper(diceCount, [], desiredSum)
 }
 
-getDiceCombosForSum(3,3)
+//getDiceCombosForSum(3,3)
 
-console.log("-----------")
+
 //given N 6-sided dice, print all possible combinations of them.----------------------------------------
 function diceCountHelper(diceLeft,choices){
   
@@ -69,7 +76,7 @@ function getDiceCombos(diceCount){
   diceCountHelper(diceCount, [])
 }
 
-getDiceCombos(3)
+//getDiceCombos(3)
 
 
 
