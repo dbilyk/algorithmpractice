@@ -1,10 +1,20 @@
-function Maze (rows,columns){
+let events = {
+  onCellChange: "onCellChange"
+}
 
-  let _maze
+
+function MazeModel (rows,columns){
+
+  let _maze,
+  _isRunning     = false
+  
   this.rowCount = rows
   this.colCount = columns
+  
 
-  let init = ()=>{
+  
+
+  this.restart = ()=>{
     result = []
 
     for(let i=0;i<rows;i++){
@@ -16,7 +26,7 @@ function Maze (rows,columns){
           cell = new Cell(i,j,true)
           newRow.push(cell)
         }
-        else if(i === 0 || i ===rows -1){
+        else if(i === 0 || i === rows - 1){
           cell = new Cell(i,j,true)
           newRow.push(cell)
         }
@@ -32,18 +42,17 @@ function Maze (rows,columns){
 
     let exitColIndex = 1 + Math.floor(Math.random()*columns-1)
     let exitRowIndex = (Math.random() > 0.5) ? 0 : rows-1
-    result[exitRowIndex][exitColIndex].isWall = false
+    result[exitRowIndex][exitColIndex].setWall(false)
 
     _maze = result 
   }
 
-  init()
   this.getMaze = ()=>{
     return _maze
   }
   this.forEachCell = (func)=>{
-    for(let i=0;i<this.rowCount;i++){
-      for(let j=0; j<this.colCount; j++){
+    for(let i=0;i < this.rowCount;i++){
+      for(let j=0; j < this.colCount; j++){
         func(_maze[i][j])
 
       }
@@ -55,91 +64,257 @@ function Maze (rows,columns){
     (row >=0 && row < this.rowCount && col >= 0 && col < this.colCount)?true:false
   }
 
-  
-
-  let findExitHelper = (maze,row,col)=>{
-    if(!_isInBounds){
-      return true
-    }
-    else if(maze[row][col].isWall){
-      return false
+  this.cell = (r,c)=>{
+    if(typeof r === "string" && c === undefined){
+     let rowColArr =  r.split(",")
+     return _maze[parseFloat(rowColArr[0])][parseFloat(rowColArr[1])] 
     }
     else{
-      
+      return _maze[r][c]
+    }
+  }
+  
+  this.setRunningStatus = (bool)=>{
+    _isRunning = bool
+  }
+  this.getRunningStatus = ()=>{
+    return _isRunning
+  }
+
+  let findExitHelper = (row,col,lastCell)=>{
+    if(!_isInBounds && !lastCell._isWall){
+      return true
     }
 
+    else if(_maze[row][col].isWall()){
+      return false
+    }
+    else if(_maze[row][col].isTainted()){
 
+
+    }
+    else{
+      //TODO: recursive calls to each side node.
+      
+    }
   }
 
-  this.findExit = (startRow,startCol)=>{
-    findExitHelper(_maze,row,col)
+  this.findExit = (row,col)=>{
+    findExitHelper(row,col,[])
   }
-  document.addEventListener("startMaze",(e)=>{
-    console.log(e.detail)
-    let startRowColArray = e.detail.split(",")
-    this.findExit(parseInt(startRowColArray[0]),parseInt(startRowColArray[1]))
-  })
+  
 }
 
 
-function Cell(row,col, isWall){
-  this.row      = row,
-  this.col      = col,
-  this.isMarked = false,
-  this.isBad    = false,
-  this.isWall   = isWall
+
+
+//-----------------------------VIEW CONTROLLER------------------------------------------------
+
+function MazeViewController(){
+  let _view = new MazeView()
+  let _model = new MazeModel(20,20)
+      
+
+  //clicking a cell should restart everything from the new location
+  let onCellClick = (e)=>{
+
+    //tell the model to restart search from new location.
+    let clickedCell = _model.cell(e.target.id)
+    start(clickedCell.row(),clickedCell.col())
+
+    //RECURSIVE FUNCTION
+    _model.findExit(clickedCell.row(),clickedCell.col())
+    
+  }
+
+  
+
+
+  let start = (row,col)=>{
+    //restart the model.
+    _view.removeAllCellsFromDOM()
+    _model.restart()
+
+    //load uiCells
+    _model.forEachCell((cellData)=>{
+      _view.createCell(cellData)
+      let uiCell = _view.getUiCell(cellData)
+      _view.updateCellStyles(cellData, uiCell)
+      _view.bindCallbacksToCellClicks(uiCell, onCellClick)
+      _view.addCellToDOM(uiCell)
+    })
+    
+    //start listening to data changes
+    document.addEventListener(events.onCellChange,(e)=>{
+      let newCellData = e.detail
+      
+      let clickedUiCell = _view.getUiCell(newCellData)
+      _view.updateCellStyles(newCellData,clickedUiCell)
+    })
+    
+    
+  }
+  start()  
+  
+  
+  
+
+
 }
 
-function MazeViewController(mazeInstance){
-  let cellSize   = 30,
+let MazeVC = new MazeViewController()
+
+
+
+
+//---------------------------------------------VIEW------------------------------------------------
+
+
+function MazeView(){
+
+  let _cellSize = 30,
       wallColor  = "#aaa",
       floorColor = "#eee",
       markedColor = "#f55",
       badColor = "#ddd",
+      _uiCells    = {}
+      
 
-      uiCells    = {}
+  this.getUiCell = (cellData)=>{
+    return _uiCells[`${cellData.row()},${cellData.col()}`]
+  }
 
-
-  this.updateUiCell = (row,col)=>{
-    let cell = uiCells[`${row},${col}`]
-    cell.style.backgroundColor = (cell.isMarked)?markedColor:floorColor
-    cell.style.backgroundColor = (cell.isBad)?badColor:floorColor
-    
-    if (cell.isMarked || cell.isBad){
-      cell.style.borderRadius = 15 + "px"
-    }
-    
+  //will be the com
+  this.bindCallbacksToCellClicks = (uiCellNode, callback)=>{
+    uiCellNode.addEventListener("click", (e)=>{
+      callback(e)
+    })
     
   }
 
-  
-  //populate the View dynamically
-  mazeInstance.forEachCell((cell)=>{
-    let uiCell = document.createElement("div")
-    uiCell.id = `${cell.row},${cell.col}`
-    uiCell.className = (cell.isWall)?"wall":"floor"
-    uiCell.style.width = cellSize + "px"
-    uiCell.style.height = cellSize + "px"
+  this.createCell = (cellData)=>{
+    
+    let uiCell    = document.createElement("div"),
+        elementID = `${cellData.row()},${cellData.col()}`
+
+    uiCell.id             = elementID
+    uiCell.className      = (cellData.isWall())?"wall":"floor"
+    uiCell.style.width    = _cellSize + "px"
+    uiCell.style.height   = _cellSize + "px"
     uiCell.style.position = "absolute"
-    uiCell.style.top = (cell.row * 30) + "px"
-    uiCell.style.left = (cell.col * 30) + "px"
+    uiCell.style.top      = (cellData.row() * _cellSize) + "px"
+    uiCell.style.left     = (cellData.col() * _cellSize) + "px"
+
+    _uiCells[elementID] = uiCell
+
+  }
+
+
+  this.updateCellStyles = (cellData,uiCell)=>{
     
-    uiCell.style.backgroundColor = (cell.isWall)?wallColor:floorColor
+
+    if(cellData.isTainted()){
+      uiCell.style.backgroundColor = badColor
+    }
+    else if (cellData.isMarked()){
+      uiCell.style.backgroundColor = markedColor
+    }
+    else if (cellData.isWall()){
+      uiCell.style.backgroundColor = wallColor
+    }
+    else{
+      uiCell.style.backgroundColor = floorColor
+    }
+
+
+    if (cellData.isMarked() || cellData.isTainted()){
+      uiCell.style.borderRadius = 15 + "px"
+    }
+    else{
+      uiCell.style.borderRadius = 0 + "px"
+    }
+  }
+    
+  this.addCellToDOM = (uiCell)=>{
     document.getElementsByTagName("body")[0].appendChild(uiCell)
+  }
 
-    //start listening to each cell to start the maze.
-    uiCell.addEventListener("click",(e=>{
-      console.log(e)
-      let startEvent = new CustomEvent("startMaze", {detail:e.target.id})
-      document.dispatchEvent(startEvent)
+  this.removeAllCellsFromDOM = ()=>{
+    document.getElementsByTagName("body")[0].childNodes.forEach((cell)=>cell.remove())
+  }
 
-      
-    }))
-    uiCells[`${cell.row},${cell.col}`] = uiCell
-    
-  })
   
+
 }
 
 
+
+
+
+// ---------------------------------HELPERS-------------------------------------------------------
+
+
+
+function Cell(row,col, isWall){
+
+
+  let _row            = row,
+      _col            = col,
+      _isMarked       = false,
+      _isTainted      = false,
+      _isWall         = isWall,
+      _that           = this,
+      _didChangeEvent
+
+
+
+  let sendCellDidChangeEvent = ()=>{
+    if (!_didChangeEvent){
+      _didChangeEvent = new Event(events.onCellChange,{detail:_that})
+    }
+    document.dispatchEvent(_didChangeEvent)
+  }
+
+  this.row    = ()=>{
+    return _row
+  }
+  this.col    = ()=>{
+    return _col
+  }
+  this.isWall = ()=>{
+    return _isWall
+  }
+
+  this.setWall = (bool)=>{
+    _isWall = bool
+  }
+
+  this.isMarked = ()=>{
+    return _isMarked
+  }
+
+  this.isTainted = ()=>{
+    return _isTainted
+  }
+
+
+  this.mark   = ()=>{
+    _isMarked = true
+    sendCellDidChangeEvent()
+
+  }
+  this.unmark = ()=>{
+    _isMarked = false
+    sendCellDidChangeEvent()
+  }
+  this.taint  = ()=>{
+    _isTainted = true
+    sendCellDidChangeEvent()
+  }
+  this.untaint = ()=>{
+    _isTainted = false
+    sendCellDidChangeEvent()
+    
+  }
+}
 

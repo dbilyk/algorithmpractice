@@ -1,9 +1,6 @@
 //recursion practice
 
 //find your way out of a maze.
-let mazeModel = new Maze(8,8)
-let mazeView = new MazeViewController(mazeModel)
-
 
 
 
