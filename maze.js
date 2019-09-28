@@ -2,6 +2,9 @@ let events = {
   onCellChange: "onCellChange"
 }
 
+function P(e){
+  console.log(e)
+}
 
 function MazeModel (rows,columns){
 
@@ -31,7 +34,7 @@ function MazeModel (rows,columns){
           newRow.push(cell)
         }
         else{
-          cell = new Cell(i,j,(Math.random()>0.7)?true:false)
+          cell = new Cell(i,j,(Math.random()>0.8)?true:false)
           newRow.push(cell)
         }
 
@@ -60,8 +63,8 @@ function MazeModel (rows,columns){
 
   }
   
-  let _isInBounds = (row,col)=>{
-    (row >=0 && row < this.rowCount && col >= 0 && col < this.colCount)?true:false
+  let m_isInBounds = (row,col)=>{
+    return (row >=0 && row < this.rowCount && col >= 0 && col < this.colCount)?true:false
   }
 
   this.cell = (r,c)=>{
@@ -81,26 +84,52 @@ function MazeModel (rows,columns){
     return _isRunning
   }
 
-  let findExitHelper = (row,col,lastCell)=>{
-    if(!_isInBounds && !lastCell._isWall){
+  let findExitHelper = (row,col,isSolved)=>{
+    let thisCell
+
+    if(isSolved[0]){
+      return
+    }
+
+    if(m_isInBounds(row,col)){
+      thisCell = _maze[row][col]
+    }
+    
+    if(!m_isInBounds(row,col)){
+      isSolved[0] = true
       return true
     }
 
-    else if(_maze[row][col].isWall()){
+
+    //if this cell is a wall, tainted, or already part of the path...
+    else if(thisCell.isWall() || thisCell.isTainted() || thisCell.isMarked()){
       return false
     }
-    else if(_maze[row][col].isTainted()){
+    
 
-
-    }
     else{
-      //TODO: recursive calls to each side node.
+      thisCell.mark()
+
+      setTimeout(()=>{
+        if(
+          findExitHelper(row-1, col, isSolved) ||
+          findExitHelper(row+1, col, isSolved) ||
+          findExitHelper(row, col+1, isSolved) ||
+          findExitHelper(row-1, col-1, isSolved)
+          ){
+            return true
+          }
+          else{
+            setTimeout(()=>thisCell.taint(),50)
+            return false
+          }
+      },50)
       
     }
   }
 
   this.findExit = (row,col)=>{
-    findExitHelper(row,col,[])
+    return findExitHelper(row,col,[false])
   }
   
 }
@@ -112,7 +141,7 @@ function MazeModel (rows,columns){
 
 function MazeViewController(){
   let _view = new MazeView()
-  let _model = new MazeModel(20,20)
+  let _model = new MazeModel(30,30)
       
 
   //clicking a cell should restart everything from the new location
@@ -121,7 +150,7 @@ function MazeViewController(){
     //tell the model to restart search from new location.
     let clickedCell = _model.cell(e.target.id)
     start(clickedCell.row(),clickedCell.col())
-
+    
     //RECURSIVE FUNCTION
     _model.findExit(clickedCell.row(),clickedCell.col())
     
@@ -134,6 +163,7 @@ function MazeViewController(){
     //restart the model.
     _view.removeAllCellsFromDOM()
     _model.restart()
+    
 
     //load uiCells
     _model.forEachCell((cellData)=>{
@@ -173,10 +203,10 @@ let MazeVC = new MazeViewController()
 function MazeView(){
 
   let _cellSize = 30,
-      wallColor  = "#aaa",
-      floorColor = "#eee",
-      markedColor = "#f55",
-      badColor = "#ddd",
+      wallColor  = "#444",
+      floorColor = "#fff",
+      markedColor = "#55f",
+      badColor = "#eee",
       _uiCells    = {}
       
 
@@ -215,12 +245,17 @@ function MazeView(){
 
     if(cellData.isTainted()){
       uiCell.style.backgroundColor = badColor
+      uiCell.style.transform = "scale(0.7,0.7)"
     }
     else if (cellData.isMarked()){
       uiCell.style.backgroundColor = markedColor
+      
+      uiCell.style.transform = "scale(0.7,0.7)"
     }
     else if (cellData.isWall()){
       uiCell.style.backgroundColor = wallColor
+      uiCell.style.boxShadow = "0 2px 2px 0 #33333344" 
+      uiCell.style.zIndex = "100" 
     }
     else{
       uiCell.style.backgroundColor = floorColor
@@ -232,6 +267,7 @@ function MazeView(){
     }
     else{
       uiCell.style.borderRadius = 0 + "px"
+      
     }
   }
     
@@ -240,7 +276,12 @@ function MazeView(){
   }
 
   this.removeAllCellsFromDOM = ()=>{
-    document.getElementsByTagName("body")[0].childNodes.forEach((cell)=>cell.remove())
+    let body = document.getElementsByTagName("body")[0]
+    while(body.childElementCount > 0){
+      body.removeChild(body.firstChild)
+    }
+
+    
   }
 
   
@@ -270,7 +311,7 @@ function Cell(row,col, isWall){
 
   let sendCellDidChangeEvent = ()=>{
     if (!_didChangeEvent){
-      _didChangeEvent = new Event(events.onCellChange,{detail:_that})
+      _didChangeEvent = new CustomEvent(events.onCellChange,{detail:_that})
     }
     document.dispatchEvent(_didChangeEvent)
   }
