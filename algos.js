@@ -1,182 +1,178 @@
 //recursion practice
 
-//find your way out of a maze.
+//find all possible sublists with # of values >=0
 
-
-
-
-
-
-//Variant on the algo below, but only print the dice rolls that add up to some number. --------------------------------------------
-
-
-function diceSumHelper(diceLeft,choices,desiredSum){
-  
-
-  if(diceLeft === 0){
-    let finalSum = choices.reduce((a,b)=> a+b,0)
-    if(finalSum === desiredSum){
-      console.log(choices)
-    }
-  }
-  else{
-    //using backtracking to explroe each option with a shared array.
-    for(let i=1; i<=6; i++){
-      //choose
-      choices.push(i)
-
-      //if the choices that we know about so far add up to the same or greater value than our target value, then don't bother exploring anymore.
-      let sumWithNewValue = choices.reduce((a,b)=> a+b,0)
-      if(sumWithNewValue > desiredSum) {
-        choices.pop()
-        continue
-      }
-      else {
-        //explore
-        diceSumHelper(diceLeft - 1, choices, desiredSum)
-
-        //unchoose
-        choices.pop()
-      }
-    }    
+function printSublistsHelper(inputItems, chosen) {
+  if (inputItems.length == 0) {
+    console.log(chosen)
+  } 
+  else {
+    let first = inputItems[0] //choose
+    inputItems.splice(0,1) 
+    chosen.push(first)
+    printSublistsHelper(inputItems, chosen); //explore if first member IS included
+    chosen.pop()
+    printSublistsHelper(inputItems,chosen) //explore if first member is NOT included
+    inputItems.splice(0,0,first) //unchoose
   }
 }
 
-function getDiceCombosForSum(diceCount, desiredSum){
-  diceSumHelper(diceCount, [], desiredSum)
+function printAllSublists(inputArr) {
+  let chosen = [];
+  printSublistsHelper(inputArr, chosen);
+  
+}
+
+printAllSublists(["1", "2", "3", "4"]);
+
+//find your way out of a maze.
+
+//let MazeVC = new MazeViewController();
+
+//Variant on the algo below, but only print the dice rolls that add up to some number. --------------------------------------------
+
+function diceSumHelper(diceLeft, choices, desiredSum) {
+  5;
+
+  if (diceLeft === 0) {
+    let finalSum = choices.reduce((a, b) => a + b, 0);
+    if (finalSum === desiredSum) {
+      console.log(choices);
+    }
+  } else {
+    //using backtracking to explroe each option with a shared array.
+    for (let i = 1; i <= 6; i++) {
+      //choose
+      choices.push(i);
+
+      //if the choices that we know about so far add up to the same or greater value than our target value, then don't bother exploring anymore.
+      let sumWithNewValue = choices.reduce((a, b) => a + b, 0);
+      if (sumWithNewValue > desiredSum) {
+        choices.pop();
+        continue;
+      } else {
+        //explore
+        diceSumHelper(diceLeft - 1, choices, desiredSum);
+
+        //unchoose
+        choices.pop();
+      }
+    }
+  }
+}
+
+function getDiceCombosForSum(diceCount, desiredSum) {
+  diceSumHelper(diceCount, [], desiredSum);
 }
 
 //getDiceCombosForSum(3,3)
 
-
 //given N 6-sided dice, print all possible combinations of them.----------------------------------------
-function diceCountHelper(diceLeft,choices){
-  
-
-  if(diceLeft === 0){
-    console.log(choices)
-  }
-  else{
+function diceCountHelper(diceLeft, choices) {
+  if (diceLeft === 0) {
+    console.log(choices);
+  } else {
     //using backtracking to explroe each option with a shared array.
-    for(let i=1; i<=6; i++){
+    for (let i = 1; i <= 6; i++) {
       //choose
-      choices.push(i)
+      choices.push(i);
       //explore
-      diceCountHelper(diceLeft - 1, choices)
+      diceCountHelper(diceLeft - 1, choices);
       //unchoose
-      choices.pop()
-    }    
-  }
-}
-
-function getDiceCombos(diceCount){
-  diceCountHelper(diceCount, [])
-}
-
-//getDiceCombos(3)
-
-
-
-//reverse lines----------------------------------------------------------------------------------------
-function reverseHelper(linesLeft, result){
-  if(linesLeft == 0){
-    return result
-  }
-  else{
-    let linesArr = linesLeft.split(/\n/)
-    let newLinesLeft = linesArr.reduce((prev,curr,i)=>{
-      if(i!=linesArr.length-1) return prev + "\n" + linesArr[i]
-      else return prev + ""
-    },"")
-    return reverseHelper(newLinesLeft,result + linesArr[linesArr.length-1])
-  }
-}
-
-function reverseLines(string){
-  return reverseHelper(string, "")
-}
-
-//console.log(reverseLines("once again,\n leave the train,\n all is lost, \n father frost."))
-
-
-
-
-//check if a string is a palindrome----------------------------------------------------------------
-
-function isPalindrome(remainingString){
-  console.log(remainingString)
-  let s = remainingString.toLowerCase()
-
-  //base case
-  if(remainingString.length <= 1){
-    return true
-  }
-  if(s.charAt(0) === s.charAt(s.length-1)){
-    return isPalindrome(s.slice(1,s.length-1))
-  }
-  else{
-    return false
-  }
-}
-//console.log(isPalindrome("a"))
-
-
-
-//Print all ways to rearrange the characters in a string--------------------------------------------.
-function stringAnagramsHelper(choiceChars, resultStr){
-  //base case
-  if(choiceChars.length === 0){
-    console.log(resultStr)
-  }
-  else{
-    let chars = choiceChars.split('')
-
-    for (let i = 0; i < chars.length; i++) {
-      //choose
-      let c = chars[i]
-      
-      //explore
-      let remainingChoices = choiceChars.slice(0,i)+choiceChars.slice(i+1)
-      let nextResult = resultStr + c
-      stringAnagramsHelper(remainingChoices, nextResult)
-
-      //unchoose - not needed because I'm not operating on variables shared between loop iterations...
-      
+      choices.pop();
     }
   }
 }
 
-function stringAnagrams(str){
-  stringAnagramsHelper(str, "")
+function getDiceCombos(diceCount) {
+  diceCountHelper(diceCount, []);
+}
+
+//getDiceCombos(3)
+
+//reverse lines----------------------------------------------------------------------------------------
+function reverseHelper(linesLeft, result) {
+  if (linesLeft == 0) {
+    return result;
+  } else {
+    let linesArr = linesLeft.split(/\n/);
+    let newLinesLeft = linesArr.reduce((prev, curr, i) => {
+      if (i != linesArr.length - 1) return prev + "\n" + linesArr[i];
+      else return prev + "";
+    }, "");
+    return reverseHelper(newLinesLeft, result + linesArr[linesArr.length - 1]);
+  }
+}
+
+function reverseLines(string) {
+  return reverseHelper(string, "");
+}
+
+//console.log(reverseLines("once again,\n leave the train,\n all is lost, \n father frost."))
+
+//check if a string is a palindrome----------------------------------------------------------------
+
+function isPalindrome(remainingString) {
+  console.log(remainingString);
+  let s = remainingString.toLowerCase();
+
+  //base case
+  if (remainingString.length <= 1) {
+    return true;
+  }
+  if (s.charAt(0) === s.charAt(s.length - 1)) {
+    return isPalindrome(s.slice(1, s.length - 1));
+  } else {
+    return false;
+  }
+}
+//console.log(isPalindrome("a"))
+
+//Print all ways to rearrange the characters in a string--------------------------------------------.
+function stringAnagramsHelper(choiceChars, resultStr) {
+  //base case
+  if (choiceChars.length === 0) {
+    console.log(resultStr);
+  } else {
+    let chars = choiceChars.split("");
+
+    for (let i = 0; i < chars.length; i++) {
+      //choose
+      let c = chars[i];
+
+      //explore
+      let remainingChoices = choiceChars.slice(0, i) + choiceChars.slice(i + 1);
+      let nextResult = resultStr + c;
+      stringAnagramsHelper(remainingChoices, nextResult);
+
+      //unchoose - not needed because I'm not operating on variables shared between loop iterations...
+    }
+  }
+}
+
+function stringAnagrams(str) {
+  stringAnagramsHelper(str, "");
 }
 //stringAnagrams("abc")
 
-
-
 //print all binary numbers given the number of digits N. --------------------------------------------
-function printBinaryHelper(digitCount, prefix){
-  if(digitCount === 0){
-    console.log(prefix)
-  }
-  else{
-    printBinaryHelper(digitCount - 1, prefix + "0")
-    printBinaryHelper(digitCount - 1, prefix + "1")
+function printBinaryHelper(digitCount, prefix) {
+  if (digitCount === 0) {
+    console.log(prefix);
+  } else {
+    printBinaryHelper(digitCount - 1, prefix + "0");
+    printBinaryHelper(digitCount - 1, prefix + "1");
   }
 }
 
-function printBinary(digitCount){
-  if(digitCount == 0){
-    return null
+function printBinary(digitCount) {
+  if (digitCount == 0) {
+    return null;
+  } else {
+    printBinaryHelper(digitCount, "");
   }
-  else{
-    printBinaryHelper(digitCount,"")
-  }
-
 }
 //printBinary(3)
-
-
-
 
 /*
 function BooleanGridNS(){
@@ -346,17 +342,15 @@ function factorialNS(){
 
 */
 
-
 //A builder is looking to build a row of N houses that can be of K different colors. He has a goal of minimizing cost while ensuring that no two neighboring houses are of the same color.
 //Given an N by K matrix where the nth row and kth column represents the cost to build the nth house with kth color, return the minimum cost which achieves this goal.
-
 
 //sum [n][k]
 // [
 //   [4000,5000,2300],
 //   [2000,1500,1000],
 //   [6500,3000,3500]
-  
+
 // ]
 
 // function Problem2(){
@@ -364,12 +358,7 @@ function factorialNS(){
 
 //   }
 
-
 // }
-
-
-
-
 
 // Given a list of integers, write a function that returns the largest sum of non-adjacent numbers. Numbers can be 0 or negative.
 // For example, [2, 4, 6, 2, 5] should return 13, since we pick 2, 6, and 5. [5, 1, 1, 5] should return 10, since we pick 5 and 5.
@@ -381,15 +370,15 @@ function factorialNS(){
 //[1,1,1,3,1,-1,1,0]
 
 //call the recursive sum function twice - once for the first positive element, and once for the second positive element.
-//take the first element and start 
+//take the first element and start
 // function adjacentSums() {
 //   function getMaxNonAdjacentSum(intArray){
 
 //     let nonAdjacentSums = []
-  
+
 //     for(let i = 0; i< intArray.length; i++){
 //       let currentVal = intArray[intArray]
-  
+
 //       if(currentVal<=0){
 //         continue
 //       }
@@ -397,11 +386,10 @@ function factorialNS(){
 //         nonAdjacentSums.push(recursiveSum())
 //       }
 //     }
-    
-  
+
 //   }
-  
+
 //   function recursiveSum(index, subArray){
-    
+
 //   }
 // }
