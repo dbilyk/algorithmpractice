@@ -1,5 +1,18 @@
 //recursion practice
 
+//8 queens
+function queenhelper(){
+
+}
+
+function placeQueens(qty){
+  
+}
+
+
+
+
+
 //find all possible sublists with # of values >=0
 
 function printSublistsHelper(inputItems, chosen) {
